@@ -13,8 +13,8 @@ if [ "$AMMO_TYPE" == "223-556-nato" ]; then
 elif [ "$AMMO_TYPE" == "12-gauge" ]; then
 	EXTRAS="type=00buck"
 fi
-
-RESP=`curl -f -s "https://www.ammobuy.com/ammo/$AMMO_TYPE&ret=20&$EXTRAS" \
+URL="https://www.ammobuy.com/ammo/$AMMO_TYPE&ret=20&$EXTRAS"
+RESP=`curl -f -s "$URL" \
   -H 'Connection: keep-alive' \
   -H 'Pragma: no-cache' \
   -H 'Cache-Control: no-cache' \
@@ -28,9 +28,9 @@ RESP=`curl -f -s "https://www.ammobuy.com/ammo/$AMMO_TYPE&ret=20&$EXTRAS" \
   -H 'Accept-Language: en-US,en;q=0.9' \
   --compressed`
 if [ $? -ne 0 ]; then
-  echo "Non-200 curl response at $START_DATE"
-  exit 0
-fi  
+  echo "Non-0 curl exit code at $START_DATE" # potential internet issue
+  exit 1
+fi
 
 sendMessage(){
 	MESSAGE_BODY="$1"
@@ -45,10 +45,10 @@ _EOF_
 }
 
 if ! [[ `echo "$RESP" | grep -i "Sorry. We couldn't find"` ]]; then # TODO: add 200-check here
-	sendMessage "Found $AMMO_TYPE! https://www.ammobuy.com/ammo/$AMMO_TYPE&ret=20&$EXTRAS"
+	sendMessage "Found $AMMO_TYPE! $URL"
 	if [[ $? -ne 0 ]]; then
 	  # Retry
-	  sendMessage "Found $AMMO_TYPE! https://www.ammobuy.com/ammo/$AMMO_TYPE&ret=20&$EXTRAS"
+	  sendMessage "Found $AMMO_TYPE! $URL"
 	fi
 	echo "===Found $AMMO_TYPE @ $START_DATE==="
 	mkdir capture 2>/dev/null
